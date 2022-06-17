@@ -1,0 +1,29 @@
+services:
+  app:
+    image: 'price-comparator-app'
+    build:
+      context: .
+    container_name: app
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postgres_db
+      - SPRING_DATASOURCE_USERNAME=pc_user
+      - SPRING_DATASOURCE_PASSWORD=pc_user
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    ports:
+      - "8080:8080"
+          
+  db:
+    image: 'postgres:latest'
+    container_name: db
+    environment:
+      - POSTGRES_DB=postgres_db
+      - POSTGRES_USER=pc_user
+      - POSTGRES_PASSWORD=pc_user
+    volumes:
+      - app:/home/node/app
+    ports:
+      - "5432:5432"
+volumes:
+  app:
