@@ -23,25 +23,28 @@ public class RequestValidator {
 		}
 	}
 	
-	public void validateShopUnit(ShopUnit shopUnit) throws ValidationException { 
-		if (shopUnit.getType() == null || shopUnit.getId() == null || shopUnit.getName() == null) {
+	public void validateShopUnitImport(ShopUnitImport shopUnitImport) throws ValidationException { 
+		if (shopUnitImport.getType() == null || shopUnitImport.getId() == null || shopUnitImport.getName() == null) {
 			throw new ValidationException();
 		}
 		
-		if (shopUnit.getType() == ShopUnitType.CATEGORY && shopUnit.getPrice() != null) {
+		if (shopUnitImport.getType() == ShopUnitType.CATEGORY && shopUnitImport.getPrice() != null) {
 			throw new ValidationException();
 		}
 		
-		if (shopUnit.getType() == ShopUnitType.OFFER && (shopUnit.getPrice() == null || shopUnit.getPrice() < 0)) {
+		if (shopUnitImport.getType() == ShopUnitType.OFFER && (shopUnitImport.getPrice() == null || shopUnitImport.getPrice() < 0)) {
 			throw new ValidationException();
 		}
 	}
 	
 	public void validatePostRequestBody(ShopUnitImportRequest requestBody) {
-		validateDateFormat(requestBody.getUpdateDate());
-		checkDuplicatedIds(requestBody.getItems());
 		if (requestBody.getItems() == null || requestBody.getUpdateDate() == null) {
 			throw new ValidationException();
+		}
+		validateDateFormat(requestBody.getUpdateDate());
+		checkDuplicatedIds(requestBody.getItems());
+		for (ShopUnitImport shopUnitImport : requestBody.getItems()) {
+			validateShopUnitImport(shopUnitImport);
 		}
 	}
 	
@@ -52,6 +55,35 @@ public class RequestValidator {
 			if (!ids.contains(id)) {
 				ids.add(id);
 			} else {
+				throw new ValidationException();
+			}
+		}
+	}
+	
+	public void validateTypeChange(ShopUnitImportRequest requestBody, Set<String> categoriesInDb, Set<String> offersInDb) {
+		for (ShopUnitImport shopUnitImport : requestBody.getItems()) {
+			if (shopUnitImport.getType() == ShopUnitType.CATEGORY && offersInDb.contains(shopUnitImport.getId())) {
+				throw new ValidationException();
+			}
+			
+			if (shopUnitImport.getType() == ShopUnitType.OFFER && categoriesInDb.contains(shopUnitImport.getId())) {
+				throw new ValidationException();
+			}
+		}
+	}
+	
+	public void validateParentType(ShopUnitImportRequest requestBody, Set<String> categoriesInDb) {
+		Set<String> categoriesInRequest = new HashSet<>();
+		
+		for (ShopUnitImport shopUnitImport : requestBody.getItems()) {
+			if (shopUnitImport.getType() == ShopUnitType.CATEGORY) {
+				categoriesInRequest.add(shopUnitImport.getId());
+			}
+		}
+		
+		for (ShopUnitImport shopUnitImport : requestBody.getItems()) {
+			String parentId = shopUnitImport.getParentId();
+			if (parentId != null &&!categoriesInDb.contains(parentId) && !categoriesInRequest.contains(parentId)) {
 				throw new ValidationException();
 			}
 		}
