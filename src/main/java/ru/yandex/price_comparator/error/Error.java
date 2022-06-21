@@ -1,4 +1,4 @@
-package ru.yandex.price_comparator.dto.error;
+package ru.yandex.price_comparator.error;
 
 public class Error {
     private Integer code;

@@ -1,7 +1,8 @@
 package ru.yandex.price_comparator.controller;
 
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +17,7 @@ import ru.yandex.price_comparator.domain.ShopUnit;
 import ru.yandex.price_comparator.domain.ShopUnitImport;
 import ru.yandex.price_comparator.domain.ShopUnitImportRequest;
 import ru.yandex.price_comparator.domain.ShopUnitType;
-import ru.yandex.price_comparator.dto.CategoryUnitInfo;
 import ru.yandex.price_comparator.exception.ItemNotFoundException;
-import ru.yandex.price_comparator.exception.ValidationException;
 import ru.yandex.price_comparator.repository.ShopUnitRepository;
 import ru.yandex.price_comparator.validation.RequestValidator;
 
@@ -36,10 +35,13 @@ public class ShopUnitController {
 		Set<String> offersInDb = shopUnitRepository.getSetOfIdsByType(ShopUnitType.OFFER.ordinal());
 		requestValidator.validateTypeChange(requestBody, categoriesInDb, offersInDb);
 		requestValidator.validateParentType(requestBody, categoriesInDb);
+		Set<String> shopUnitIdsInRequest = new HashSet<>();
 		for (ShopUnitImport shopUnitImport : requestBody.getItems()) {
 			ShopUnit shopUnit = createShopUnit(shopUnitImport, requestBody.getUpdateDate());
- 			shopUnit = shopUnitRepository.save(shopUnit); 
+ 			shopUnit = shopUnitRepository.save(shopUnit);
+ 			shopUnitIdsInRequest.add(shopUnitImport.getId());
 		}
+		updateCategoriesPrices(getCategoriesToUpdate(shopUnitIdsInRequest), requestBody.getUpdateDate());
 
 		return new ResponseEntity(null,HttpStatus.OK);
 	}
@@ -56,18 +58,15 @@ public class ShopUnitController {
 		if (!shopUnitToDelete.isPresent()) {
 			throw new ItemNotFoundException();
 		}
-		shopUnitRepository.deleteById(shopUnitId);
-		LinkedList<ShopUnit> children = new LinkedList<>();
-		List<ShopUnit> shopUnitstoDelete = new LinkedList<>();
-		children.addAll(shopUnitRepository.findByParentId(shopUnitId));
-		while (children.size() > 0) {
-			ShopUnit shopUnit = children.poll();
-			shopUnitstoDelete.add(shopUnit);
-			if (shopUnit.getType() == ShopUnitType.CATEGORY) {
-				children.addAll(shopUnitRepository.findByParentId(shopUnit.getId()));
-			}
+		Set<String> updateUnits = new HashSet<>();
+		updateUnits.add(shopUnitToDelete.get().getParentId());
+		if (shopUnitToDelete.get().getType() == ShopUnitType.CATEGORY) {
+			List<String> childrenShopUnits = shopUnitRepository.getAllChildren(shopUnitId);
+			shopUnitRepository.deleteAllById(childrenShopUnits);
 		}
-		shopUnitRepository.deleteAll(shopUnitstoDelete);
+		shopUnitRepository.deleteById(shopUnitId);
+
+		updateCategoriesPrices(getCategoriesToUpdate(updateUnits));
 		return new ResponseEntity(null,HttpStatus.OK);
 	}
 	
@@ -79,40 +78,88 @@ public class ShopUnitController {
 			throw new ItemNotFoundException();
 		}
 		ShopUnit gettingShopUnit = shopUnit.get();
-		if (gettingShopUnit.getType() == ShopUnitType.CATEGORY) {
-			assembleShopUnit(gettingShopUnit);
-			calculateCategoryPrice(gettingShopUnit);
-		}
+		replaceEmptyChildrenListWithNull(gettingShopUnit);
 		return new ResponseEntity(gettingShopUnit,null,HttpStatus.OK);
 	}
 	
-	private void assembleShopUnit(ShopUnit shopUnit) {
-		List<ShopUnit> children = shopUnitRepository.findByParentId(shopUnit.getId());
-		shopUnit.setChildren(children);
-		for (ShopUnit child : children) {
-			if (child.getType() == ShopUnitType.CATEGORY) {
-				assembleShopUnit(child);
+	/**
+	 * Проход по дереву shopUnit с заменой пустых массивов дочерних элементов на null
+	 * @param shopUnit
+	 */
+	private void replaceEmptyChildrenListWithNull(ShopUnit shopUnit) {
+		List<ShopUnit> children = shopUnit.getChildren();
+		if (children.isEmpty()) {
+			shopUnit.setChildren(null);
+		} else {
+			for (ShopUnit child : shopUnit.getChildren()) {
+				replaceEmptyChildrenListWithNull(child);
 			}
 		}
 	}
 	
-	private CategoryUnitInfo calculateCategoryPrice(ShopUnit shopUnit) {
-		CategoryUnitInfo currentCategoryInfo = new CategoryUnitInfo();
-		int directChildrenOffers = 0;
-		long directChildrenTotalPrice = 0;
-		for (ShopUnit child : shopUnit.getChildren()) {
-			if (child.getType() == ShopUnitType.CATEGORY) {
-				CategoryUnitInfo childCategoryInfo = calculateCategoryPrice(child);
-				directChildrenOffers += childCategoryInfo.getTotalChildren();
-				directChildrenTotalPrice += childCategoryInfo.getTotalPrice();
+	/**
+	 * Метод обновляет цену родительских категорий и дату:
+	 * 1) если цена не изменилась, то не производится обновления даты
+	 * 2) если в узле нет дочерних элементов, то проставляется цена = null
+	 * 
+	 * @param updatedShopUnits
+	 * @param updateDate
+	 */
+	
+	private void updateCategoriesPrices(Set<String> categoriesToUpdate, String updateDate) {
+		for (String categoryId : categoriesToUpdate) {
+			List<String> children = shopUnitRepository.getAllChildrenByType(categoryId, ShopUnitType.OFFER.ordinal());
+			ShopUnit category = shopUnitRepository.findById(categoryId).get();
+			if (children.isEmpty()) {
+				if (category.getPrice() != null) {
+					category.setPrice(null);
+					category.setDate(updateDate);
+				}
 			} else {
-				directChildrenOffers++;
-				directChildrenTotalPrice += child.getPrice();
+				if (recalculateCategoryPrice(category, children)) {
+					category.setDate(updateDate);
+				}
 			}
+			shopUnitRepository.save(category);
 		}
-		currentCategoryInfo.setTotalChildren(directChildrenOffers);
-		currentCategoryInfo.setTotalPrice(directChildrenTotalPrice);
-		shopUnit.setPrice((long) Math.floor(directChildrenTotalPrice * 1.0 / directChildrenOffers));
-		return currentCategoryInfo;
 	}
+	
+	/**
+	 * Метод обновляет цену родительских категорий:
+	 * если в узле нет дочерних элементов, то проставляется цена = null
+	 * @param categoriesToUpdate
+	 */
+	private void updateCategoriesPrices(Set<String> categoriesToUpdate) {
+		for (String categoryId : categoriesToUpdate) {
+			List<String> children = shopUnitRepository.getAllChildrenByType(categoryId, ShopUnitType.OFFER.ordinal());
+			ShopUnit category = shopUnitRepository.findById(categoryId).get();
+			if (children.isEmpty()) {
+				category.setPrice(null);
+			} else {
+				recalculateCategoryPrice(category, children);
+			}
+			shopUnitRepository.save(category);
+		}
+	}
+	
+	private Set<String> getCategoriesToUpdate(Set<String> updatedShopUnits){
+		Set<String> categoriesToUpdate = new HashSet<>();
+		for (String shopUnitId : updatedShopUnits) {
+			List<String> parentCategoris = shopUnitRepository.getAllParentByType(shopUnitId, ShopUnitType.CATEGORY.ordinal());
+			categoriesToUpdate.addAll(parentCategoris);
+		}
+		return categoriesToUpdate;
+	}
+	
+	private boolean recalculateCategoryPrice(ShopUnit category, List<String> children) {
+		Long totalPrice = shopUnitRepository.findAllById(children).stream().map(x -> x.getPrice()).reduce(Long.valueOf(0), Long :: sum);
+		Long averagePrice = (long) Math.floor(totalPrice * 1.0 / children.size());
+		if (!Objects.equals(category.getPrice(),averagePrice)) {
+			category.setPrice(averagePrice);
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 }
