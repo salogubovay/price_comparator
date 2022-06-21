@@ -1,11 +1,19 @@
 package ru.yandex.price_comparator.domain;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
+
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name="SHOP_UNITS")
@@ -29,8 +37,9 @@ public class ShopUnit {
 	@Column(name="PRICE")
 	private Long price;
 	
-	@Transient
-	private List<ShopUnit> children;
+	@OneToMany(fetch = FetchType.LAZY)
+	@JoinColumn(name = "parent_id")
+	private List<ShopUnit> children = null;
 	
 	public ShopUnit() {
 		

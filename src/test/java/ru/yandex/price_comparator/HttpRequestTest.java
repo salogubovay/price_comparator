@@ -223,14 +223,14 @@ class HttpRequestTest {
 				+ "                \"price\": 69999\r\n"
 				+ "            }\r\n"
 				+ "        ],\r\n"
-				+ "        \"updateDate\": \"2022-02-03T15:00:00.000Z\"\r\n"
+				+ "        \"updateDate\": \"2022-02-04T15:00:00.000Z\"\r\n"
 				+ "    }";
 		
 		String expectedJsonTree = "{\r\n"
 				+ "	\"type\": \"CATEGORY\",\r\n"
 				+ "	\"id\": \"category_1\",\r\n"
 				+ "	\"name\": \"Товары\",\r\n"
-				+ "	\"date\": \"2022-02-01T12:00:00.000Z\",\r\n"
+				+ "	\"date\": \"2022-02-04T15:00:00.000Z\",\r\n"
 				+ "	\"parentId\": null,\r\n"
 				+ "	\"price\": 58599,\r\n"
 				+ "	\"children\": [\r\n"
@@ -238,7 +238,7 @@ class HttpRequestTest {
 				+ "			\"type\": \"CATEGORY\",\r\n"
 				+ "			\"id\": \"category_1_2\",\r\n"
 				+ "			\"name\": \"Телевизоры\",\r\n"
-				+ "			\"date\": \"2022-02-03T12:00:00.000Z\",\r\n"
+				+ "			\"date\": \"2022-02-04T15:00:00.000Z\",\r\n"
 				+ "			\"parentId\": \"category_1\",\r\n"
 				+ "			\"price\": 50999,\r\n"
 				+ "			\"children\": [\r\n"
@@ -264,7 +264,7 @@ class HttpRequestTest {
 				+ "					\"type\": \"OFFER\",\r\n"
 				+ "					\"id\": \"offer_1_2.3\",\r\n"
 				+ "					\"name\": \"Goldstar 65\\\" LED UHD LOL Very Smart\",\r\n"
-				+ "					\"date\": \"2022-02-03T15:00:00.000Z\",\r\n"
+				+ "					\"date\": \"2022-02-04T15:00:00.000Z\",\r\n"
 				+ "					\"parentId\": \"category_1_2\",\r\n"
 				+ "					\"price\": 69999,\r\n"
 				+ "					\"children\": null\r\n"
@@ -311,8 +311,9 @@ class HttpRequestTest {
 		this.restTemplate.exchange("http://localhost:" + port + "/imports", HttpMethod.POST, httpEntity2, String.class);
 		this.restTemplate.exchange("http://localhost:" + port + "/imports", HttpMethod.POST, httpEntity3, String.class);
 		this.restTemplate.exchange("http://localhost:" + port + "/imports", HttpMethod.POST, httpEntity4, String.class);
-		ResponseEntity<?> responseEntity = this.restTemplate.exchange("http://localhost:" + port + "/nodes/category_1", HttpMethod.GET, httpEntity1, String.class);
-		String actualJsonTree = (String) responseEntity.getBody();	
+		ResponseEntity<?> responseEntity = this.restTemplate.exchange("http://localhost:" + port + "/nodes/category_1", HttpMethod.GET, null, String.class);
+		String actualJsonTree = (String) responseEntity.getBody();
+		System.out.println(actualJsonTree);
 		JSONAssert.assertEquals(expectedJsonTree, actualJsonTree, false);
 	}
 }
