@@ -9,7 +9,7 @@
 ## Сборка проекта
 
 1) Склонировать репозитарий на локальный диск:
-https://gitlab.com/aleksandr.salogubov/price_comparator.git
+https://github.com/salogubovay/price_comparator.git
 
 2) Перейти в папку с репозитарием:
 cd price_comparator
@@ -17,5 +17,8 @@ cd price_comparator
 3) Для запуска тестов нужно выполнить команду:
 mvn test
 
-4) Для запуска приложения нужно выполнить команду:
+4) Для корректного запуска сборки контейнера с приложением на Ubuntu нужно выполнить команду:
+chmod +x mvnw
+
+5) Для запуска приложения нужно выполнить команду:
 docker-compose up

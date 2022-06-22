@@ -6,7 +6,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,8 +44,8 @@ public class ShopUnitController {
  			shopUnitIdsInRequest.add(shopUnitImport.getId());
 		}
 		updateCategoriesPrices(getCategoriesToUpdate(shopUnitIdsInRequest), requestBody.getUpdateDate());
-
-		return new ResponseEntity(null,HttpStatus.OK);
+		
+		return new ResponseEntity(createHttpHeader(),HttpStatus.OK);
 	}
 	
 	private ShopUnit createShopUnit(ShopUnitImport shopUnitImport, String date) {
@@ -67,7 +69,7 @@ public class ShopUnitController {
 		shopUnitRepository.deleteById(shopUnitId);
 
 		updateCategoriesPrices(getCategoriesToUpdate(updateUnits));
-		return new ResponseEntity(null,HttpStatus.OK);
+		return new ResponseEntity(createHttpHeader(),HttpStatus.OK);
 	}
 	
 	
@@ -79,7 +81,7 @@ public class ShopUnitController {
 		}
 		ShopUnit gettingShopUnit = shopUnit.get();
 		replaceEmptyChildrenListWithNull(gettingShopUnit);
-		return new ResponseEntity(gettingShopUnit,null,HttpStatus.OK);
+		return new ResponseEntity(gettingShopUnit,createHttpHeader(),HttpStatus.OK);
 	}
 	
 	/**
@@ -160,6 +162,12 @@ public class ShopUnitController {
 		} else {
 			return false;
 		}
+	}
+	
+	private HttpHeaders createHttpHeader() {
+		HttpHeaders httpHeaders= new HttpHeaders();
+	    httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+	    return httpHeaders;
 	}
 	
 }
