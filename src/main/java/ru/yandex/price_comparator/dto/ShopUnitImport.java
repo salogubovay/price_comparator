@@ -1,7 +1,8 @@
-package ru.yandex.price_comparator.domain;
+package ru.yandex.price_comparator.dto;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import ru.yandex.price_comparator.domain.ShopUnitType;
 
 public class ShopUnitImport {
 	@NotNull
