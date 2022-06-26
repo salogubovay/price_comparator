@@ -21,12 +21,12 @@
 ## Описание работы приложения
 История обновления элементов хранится в базе данных следующим образом (таблица SHOP_UNITS_STATISTICS):  
 
-|     id        |   parentid    |   date   |   type | price|  
-|---------------|---------------|----------|---------------|    
-|parent-category|null           |01.01.2022|CATEGORY| 100  |  
-|child-offer    |parent-category|01.01.2022|OFFER   | 100  |  
-|parent-category|null           |21.01.2022|CATEGORY| 200  |  
-|child-offer    |child-offer    |21.01.2022|OFFER   | 200  |  
+|      id         |    parentid     |    date    | type     | price |  
+| --------------- | --------------- |----------- | -------- | ----- |   
+| parent-category | null            | 01.01.2022 | CATEGORY | 100   |  
+| child-offer     | parent-category | 01.01.2022 | OFFER    | 100   |  
+| parent-category | null            | 21.01.2022 | CATEGORY | 200   |  
+| child-offer     | child-offer     | 21.01.2022 | OFFER    | 200   |  
 
 Если удаляется элемент child-offer, то в базе данных хранятся следующие записи:  
 
