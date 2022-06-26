@@ -1,6 +1,6 @@
 # Бэкенд для веб-сервиса сравнения цен (price_comparator)
 
-## Описание
+## Описание сервиса
 Данный сервис обрабатывает следующие типы запросов:
 
 1) импорт / обновление товаров и категорий: /imports
@@ -17,6 +17,24 @@
 Приложение развёрнуто в предоставленном контейнере (10.20.1.155.), для отправки запросов на него нужно использовать адрес: https://snake-2061.usr.yandex-academy.ru
 
 В данном контейнере настроен автоматический перезапуск сервиса при перезагрузке в файле: /etc/systemd/system/price_comparator.service
+
+## Описание работы приложения
+История обновления элементов хранится в базе данных следующим образом (таблица SHOP_UNITS_STATISTICS):
+
+------id-------|---parentid----|---date---|--type--|-price-
+parent-category|null           |01.01.2022|CATEGORY| 100
+child-offer    |parent-category|01.01.2022|OFFER   | 100
+parent-category|null           |21.01.2022|CATEGORY| 200
+child-offer    |child-offer    |21.01.2022|OFFER   | 200
+
+Если удаляется элемент child-offer, то в базе данных хранятся следующие записи:
+
+------id-------|---parentid----|---date---|--type--|-price-
+parent-category|null           |01.01.2022|CATEGORY| 100
+parent-category|null           |21.01.2022|CATEGORY| 200
+parent-category|null           |21.01.2022|CATEGORY| null
+
+Таким образом, вся история обновлений категории parent-category будет включать три элемента.
 
 ## Сборка проекта
 

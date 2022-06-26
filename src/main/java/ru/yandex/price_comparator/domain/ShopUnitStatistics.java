@@ -2,19 +2,23 @@ package ru.yandex.price_comparator.domain;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
 
 @Entity
 @Table(name="SHOP_UNITS_STATISTICS")
-@IdClass(ShopUnitStatisticsId.class)
 public class ShopUnitStatistics {
+	
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private	Long rowNumber;
+	
 	@Column(name="ID", nullable=false)
 	private String id;
 	
-	@Id
 	@Column(name="DATE", nullable=false)
 	private String date;
 	
@@ -30,9 +34,9 @@ public class ShopUnitStatistics {
 	@Column(name="PRICE")
 	private Long price;
 
-	public ShopUnitStatistics(ShopUnitType type, String id, String name, String date, Long price, String parentId) {
+	public ShopUnitStatistics(ShopUnitType type, String uuid, String name, String date, Long price, String parentId) {
 		this.type = type;
-		this.id = id;
+		this.id = uuid;
 		this.name = name;
 		this.date = date;
 		this.price = price;
@@ -45,8 +49,8 @@ public class ShopUnitStatistics {
 		return id;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public void setId(String uuid) {
+		this.id = uuid;
 	}
 
 	public String getDate() {

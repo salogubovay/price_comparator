@@ -50,7 +50,10 @@ public class ShopUnitController {
 			ShopUnitStatistics shopUnitStatistics = createShopUnitStatistics(shopUnitImport, requestBody.getUpdateDate());
 			shopUnitsToSave.add(shopUnit);
  			shopUnitIdsInRequest.add(shopUnitImport.getId());
- 			shopUnitsStatisticsToSave.add(shopUnitStatistics);
+ 			//Категории сохранятся при пересчёте средней цены (если сохранить здесь, то будут задвоены записи в таблице SHOP_UNITS_STATISTICS)
+ 			if (shopUnitStatistics.getType() != ShopUnitType.CATEGORY) {
+ 				shopUnitsStatisticsToSave.add(shopUnitStatistics);
+ 			}
 		}
 		shopUnitRepository.saveAll(shopUnitsToSave);
 		shopUnitStatisticsRepository.saveAll(shopUnitsStatisticsToSave);
@@ -114,7 +117,7 @@ public class ShopUnitController {
 		}
 		requestValidator.validateDateFormat(dateStart.get());
 		requestValidator.validateDateFormat(dateEnd.get());
-		List<ShopUnitStatistics> shopUnitStatistics = shopUnitStatisticsRepository.getShopUnitsUpdateHistoryWhithinDates(shopUnitId, dateStart.get(), dateEnd.get());
+		List<ShopUnitStatisticUnit> shopUnitStatistics = shopUnitStatisticsRepository.getShopUnitsUpdateHistoryWhithinDates(shopUnitId, dateStart.get(), dateEnd.get());
 		return new ResponseEntity(shopUnitStatistics, createHttpHeader(), HttpStatus.OK);
 	}
 	
