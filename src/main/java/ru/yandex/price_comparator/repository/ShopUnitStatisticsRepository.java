@@ -1,7 +1,7 @@
 package ru.yandex.price_comparator.repository;
 
 import ru.yandex.price_comparator.domain.ShopUnitStatistics;
-import ru.yandex.price_comparator.domain.ShopUnitStatisticsId;
+import ru.yandex.price_comparator.dto.ShopUnitStatisticUnit;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-public interface ShopUnitStatisticsRepository extends JpaRepository<ShopUnitStatistics, ShopUnitStatisticsId> {
+public interface ShopUnitStatisticsRepository extends JpaRepository<ShopUnitStatistics, Long> {
 	/**
 	 * Метод удаляет из базы данных все элементы, id которых входят в список, переданный в качестве аргумента
 	 * @param ids
@@ -57,5 +57,5 @@ public interface ShopUnitStatisticsRepository extends JpaRepository<ShopUnitStat
 	@Query(
 			value = "SELECT * FROM SHOP_UNITS_STATISTICS WHERE (date >= :dateStart AND date < :dateEnd AND id = :id)", 
 			nativeQuery = true)
-	List<ShopUnitStatistics> getShopUnitsUpdateHistoryWhithinDates(@Param("id") String id, @Param("dateStart") String dateStart, @Param("dateEnd")String dateEnd);
+	List<ShopUnitStatisticUnit> getShopUnitsUpdateHistoryWhithinDates(@Param("id") String id, @Param("dateStart") String dateStart, @Param("dateEnd")String dateEnd);
 }

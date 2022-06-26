@@ -571,6 +571,7 @@ class HttpRequestTest {
 		this.restTemplate.exchange("http://localhost:" + port + "/imports", HttpMethod.POST, httpEntity4, String.class);
 		ResponseEntity<?> responseEntity = this.restTemplate.exchange("http://localhost:" + port + "/node/root-category/statistic?dateStart=" + dateStart + "&dateEnd=" + dateEnd, HttpMethod.GET, null, String.class);
 		String actualJsonTree = (String) responseEntity.getBody();
+		System.out.println(actualJsonTree);
 		assertEquals(200, responseEntity.getStatusCode().value());
 		JSONAssert.assertEquals(expectedJsonTree, actualJsonTree, false);
 	}
