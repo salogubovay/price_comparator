@@ -1,26 +1,25 @@
 package ru.yandex.price_comparator.domain;
 
-import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
+import javax.persistence.IdClass;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="SHOP_UNITS")
-public class ShopUnit {
+@Table(name="SHOP_UNITS_STATISTICS")
+@IdClass(ShopUnitStatisticsId.class)
+public class ShopUnitStatistics {
 	@Id
 	@Column(name="ID", nullable=false)
 	private String id;
 	
-	@Column(name="NAME", nullable=false)
-	private String name;
-	
+	@Id
 	@Column(name="DATE", nullable=false)
 	private String date;
+	
+	@Column(name="NAME", nullable=false)
+	private String name;
 	
 	@Column(name="TYPE", nullable=false)
 	private ShopUnitType type;
@@ -30,16 +29,8 @@ public class ShopUnit {
 	
 	@Column(name="PRICE")
 	private Long price;
-	
-	@OneToMany(fetch = FetchType.LAZY)
-	@JoinColumn(name = "PARENT_ID")
-	private List<ShopUnit> children = null;
-	
-	public ShopUnit() {
-		
-	}
 
-	public ShopUnit(ShopUnitType type, String id, String name, String date, Long price, String parentId) {
+	public ShopUnitStatistics(ShopUnitType type, String id, String name, String date, Long price, String parentId) {
 		this.type = type;
 		this.id = id;
 		this.name = name;
@@ -47,6 +38,9 @@ public class ShopUnit {
 		this.price = price;
 		this.parentId = parentId;
 	}
+	
+	public ShopUnitStatistics() {}
+	
 	public String getId() {
 		return id;
 	}
@@ -55,20 +49,20 @@ public class ShopUnit {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public String getDate() {
 		return date;
 	}
 
 	public void setDate(String date) {
 		this.date = date;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public ShopUnitType getType() {
@@ -94,12 +88,6 @@ public class ShopUnit {
 	public void setPrice(Long price) {
 		this.price = price;
 	}
-
-	public List<ShopUnit> getChildren() {
-		return children;
-	}
-
-	public void setChildren(List<ShopUnit> children) {
-		this.children = children;
-	}
+	
+	
 }

@@ -2,13 +2,12 @@ package ru.yandex.price_comparator.validation;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.util.HashSet;
 import java.util.Set;
-
 import org.junit.jupiter.api.Test;
-
 import ru.yandex.price_comparator.domain.*;
+import ru.yandex.price_comparator.dto.ShopUnitImport;
+import ru.yandex.price_comparator.dto.ShopUnitImportRequest;
 import ru.yandex.price_comparator.exception.ValidationException;
 
 class RequestValidatorTest {

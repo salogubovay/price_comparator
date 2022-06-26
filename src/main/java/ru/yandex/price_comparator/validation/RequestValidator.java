@@ -4,13 +4,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.springframework.stereotype.Component;
-
-import ru.yandex.price_comparator.domain.ShopUnit;
-import ru.yandex.price_comparator.domain.ShopUnitImport;
-import ru.yandex.price_comparator.domain.ShopUnitImportRequest;
 import ru.yandex.price_comparator.domain.ShopUnitType;
+import ru.yandex.price_comparator.dto.ShopUnitImport;
+import ru.yandex.price_comparator.dto.ShopUnitImportRequest;
 import ru.yandex.price_comparator.exception.ValidationException;
 
 @Component

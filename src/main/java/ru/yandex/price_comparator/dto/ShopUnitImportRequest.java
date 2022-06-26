@@ -1,4 +1,4 @@
-package ru.yandex.price_comparator.domain;
+package ru.yandex.price_comparator.dto;
 
 import javax.validation.constraints.NotNull;
 

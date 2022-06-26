@@ -1,12 +1,12 @@
 package ru.yandex.price_comparator.repository;
 
 import ru.yandex.price_comparator.domain.ShopUnit;
-
+import ru.yandex.price_comparator.dto.ShopUnitStatisticUnit;
 import java.util.List;
 import java.util.Set;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ShopUnitRepository extends JpaRepository<ShopUnit, String> {
 
@@ -18,9 +18,9 @@ public interface ShopUnitRepository extends JpaRepository<ShopUnit, String> {
 	 * @return
 	 */
 	@Query(
-			value = "SELECT ID FROM SHOP_UNITS WHERE TYPE = ?1", 
+			value = "SELECT ID FROM SHOP_UNITS WHERE TYPE = :type", 
 			nativeQuery = true)
-	Set<String> getSetOfIdsByType(Integer type);
+	Set<String> getSetOfIdsByType(@Param("type") Integer type);
 	
 	
 	/**
@@ -32,16 +32,16 @@ public interface ShopUnitRepository extends JpaRepository<ShopUnit, String> {
 	@Query(value = "WITH RECURSIVE result (id, parent_id, type) AS\r\n"
 			+ "        (SELECT id, parent_id, type \r\n"
 			+ "        FROM SHOP_UNITS\r\n"
-			+ "        WHERE parent_id = ?1\r\n"
+			+ "        WHERE parent_id = :id\r\n"
 			+ "        UNION ALL\r\n"
 			+ "        SELECT tree.id, tree.parent_id, tree.type \r\n"
 			+ "        FROM result INNER JOIN SHOP_UNITS tree\r\n"
 			+ "        ON result.id = tree.parent_id"
 			+ "        )\r\n"
 			+ "        SELECT id FROM result"
-			+ "        WHERE type = ?2", 
+			+ "        WHERE type = :type", 
 			nativeQuery = true)
-	List<String> getAllChildrenByType(String id, Integer type);
+	List<String> getAllChildrenByType(@Param("id") String id, @Param("type") Integer type);
 	
 	
 	/**
@@ -53,7 +53,7 @@ public interface ShopUnitRepository extends JpaRepository<ShopUnit, String> {
 	@Query(value = "WITH RECURSIVE result (id, parent_id, type) AS\r\n"
 			+ "        (SELECT id, parent_id, type \r\n"
 			+ "        FROM SHOP_UNITS\r\n"
-			+ "        WHERE parent_id = ?1\r\n"
+			+ "        WHERE parent_id = :id\r\n"
 			+ "        UNION ALL\r\n"
 			+ "        -- Recursive Subquery\r\n"
 			+ "        SELECT tree.id, tree.parent_id, tree.type \r\n"
@@ -62,12 +62,12 @@ public interface ShopUnitRepository extends JpaRepository<ShopUnit, String> {
 			+ "        )\r\n"
 			+ "        SELECT id FROM result", 
 			nativeQuery = true)
-	List<String> getAllChildren(String id);
+	List<String> getAllChildren(@Param("id") String id);
 	
 	
 	/**
 	 * Рекурсивый запрос для получения всех родительских элементов определённого типа (значение ordinal() типа ShopUnitType)
-	 * Запром в том числе возвращает сам элемент (если его тип совпадает с типом, указанным в параметре) - 
+	 * Запроc, в том числе, возвращает сам элемент (если его тип совпадает с типом, указанным в параметре) - 
 	 * - это используется для обновления цен после удаления элемента (request: /delete/{id})
 	 * @param id
 	 * @param type
@@ -76,15 +76,19 @@ public interface ShopUnitRepository extends JpaRepository<ShopUnit, String> {
 	@Query(value = "WITH RECURSIVE result (id, parent_id, type) AS\r\n"
 			+ "        (SELECT id, parent_id, type \r\n"
 			+ "        FROM SHOP_UNITS\r\n"
-			+ "        WHERE id = ?1\r\n"
+			+ "        WHERE id = :id\r\n"
 			+ "        UNION ALL\r\n"
 			+ "        SELECT tree.id, tree.parent_id, tree.type \r\n"
 			+ "        FROM result INNER JOIN SHOP_UNITS tree\r\n"
 			+ "        ON result.parent_id = tree.id"
 			+ "        )\r\n"
 			+ "        SELECT id FROM result"
-			+ "        WHERE type = ?2", 
+			+ "        WHERE type = :type", 
 			nativeQuery = true)
-	List<String> getAllParentByType(String id, Integer type);
-	  
+	List<String> getAllParentByType(@Param("id") String id, @Param("type") Integer type);
+	 
+	@Query(value = "SELECT type, id, name, date, price, PARENT_ID as parentid FROM SHOP_UNITS WHERE ID IN :ids", 
+			nativeQuery = true)
+	List<ShopUnitStatisticUnit> findAllById(@Param("ids") List<String> ids);
+	
 }
